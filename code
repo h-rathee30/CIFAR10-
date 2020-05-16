@@ -1,0 +1,56 @@
+#import of all the libraries required
+import matplotlib.pyplot as plt
+from keras.datasets import mnist
+from keras.models import Sequential 
+from keras.layers import Dense, Dropout, Activation, Flatten, MaxPool2D
+from keras.layers.normalization import BatchNormalization
+from keras.utils import np_utils
+from keras.layers import Conv2D
+import numpy as np
+
+(x_train,y_train), (x_test,y_test) = mnist.load_data()
+
+#tensorflow can handle format (batch, height, width, channel here 1 means black and white)
+feature_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
+feature_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
+feature_train = feature_train.astype('float32')
+feature_test = feature_test.astype('float32')
+feature_train.shape
+
+# feature scaling of values
+feature_train = feature_train/255
+feature_test = feature_test/255
+
+# output is one of the ten classes hence we use encoding
+targets_train = np_utils.to_categorical(y_train,10)
+targets_test = np_utils.to_categorical(y_test,10)
+
+# we build our model
+model = Sequential()
+model.add(Conv2D(32, kernel_size= (3,3), input_shape = (28,28,1), activation= 'relu'))
+model.add(BatchNormalization())
+
+model.add(Conv2D(32, kernel_size= (3,3), activation= 'relu'))
+model.add(MaxPool2D(pool_size= (2,2)))
+model.add(BatchNormalization())
+
+model.add(Conv2D(64, kernel_size= (3,3), activation='relu'))
+model.add(MaxPool2D(pool_size=(2,2)))
+model.add(BatchNormalization())
+
+model.add(Conv2D(64, kernel_size= (3,3), activation='relu'))
+model.add(Flatten())
+model.add(BatchNormalization())
+
+model.add(Dense(512, activation='relu'))
+model.add(BatchNormalization())
+model.add(Dropout(0.2))
+model.add(Dense(10, activation='softmax'))
+
+model.summary()
+
+#compile model
+model.compile( loss= 'categorical_crossentropy', optimizer= 'adam', metrics= ['accuracy'])
+
+# train the model
+epoch_history = model.fit( feature_train, targets_train, batch_size= 128, epochs= 100, validation_data= (feature_test, targets_test), verbose= 1)
